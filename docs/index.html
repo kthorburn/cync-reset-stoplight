@@ -3,9 +3,67 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Cync Reset Stoplight</title>
-<meta name="description" content="A stoplight timer for factory resetting Cync / C by GE smart bulbs: green = switch ON, red = switch OFF, yellow = get ready.">
+<title>How to Reset a Cync or C by GE Bulb | Factory Reset Timer</title>
+<meta name="description" content="How to factory reset Cync and C by GE smart bulbs, with a free timer that tells you exactly when to flip the switch. Covers every reset sequence and firmware.">
+<link rel="canonical" href="https://kenthorburn.github.io/cync-reset-stoplight/">
+<link rel="alternate" type="text/markdown" title="LLM-friendly summary" href="https://kenthorburn.github.io/cync-reset-stoplight/llms.txt">
+<meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#0e1014">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cync Reset Stoplight">
+<meta property="og:title" content="How to Reset a Cync or C by GE Smart Bulb">
+<meta property="og:description" content="A free stoplight timer for factory resetting Cync / C by GE bulbs: green = switch ON, red = switch OFF, yellow = get ready.">
+<meta property="og:url" content="https://kenthorburn.github.io/cync-reset-stoplight/">
+<meta property="og:image" content="https://kenthorburn.github.io/cync-reset-stoplight/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A stoplight showing red, yellow and green next to the words: How to reset a Cync bulb">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": "https://kenthorburn.github.io/cync-reset-stoplight/#app",
+      "name": "Cync Reset Stoplight",
+      "url": "https://kenthorburn.github.io/cync-reset-stoplight/",
+      "description": "A free browser timer for factory resetting Cync / C by GE smart bulbs with a light switch. It shows green when to turn the switch on, red when to turn it off and yellow just before each change, and beeps at every step.",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any (web browser)",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "dateModified": "2026-10-22",
+      "codeRepository": "https://github.com/KenThorburn/cync-reset-stoplight",
+      "author": { "@type": "Person", "name": "KenThorburn", "url": "https://github.com/KenThorburn" }
+    },
+    {
+      "@type": "HowTo",
+      "name": "How to factory reset a Cync smart bulb",
+      "description": "The standard Cync reset sequence for bulbs on current firmware. Use a plain on/off switch, not a dimmer.",
+      "totalTime": "PT15S",
+      "tool": [{ "@type": "HowToTool", "name": "A plain on/off light switch" }],
+      "step": [
+        { "@type": "HowToStep", "name": "Start off", "text": "Turn the bulb OFF with the light switch." },
+        { "@type": "HowToStep", "name": "Flip five times", "text": "Turn the switch ON for 1 second, then OFF for 1 second. Do this five times." },
+        { "@type": "HowToStep", "name": "Leave it on", "text": "Turn the switch ON and leave it. The bulb flashes when the reset worked." },
+        { "@type": "HowToStep", "name": "Try the older sequences if needed", "text": "If the bulb doesn't flash, it may run older firmware. Try Alternate 1 (OFF 5s, then ON 8s / OFF 2s five times, then ON), then Alternate 2." }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "How do I factory reset a Cync bulb?", "acceptedAnswer": { "@type": "Answer", "text": "Start with the bulb off. Turn the switch on for 1 second, then off for 1 second, five times. Then turn it on and leave it. The bulb flashes when the reset worked. This is Cync's standard sequence for current firmware." } },
+        { "@type": "Question", "name": "How do I reset an older C by GE bulb?", "acceptedAnswer": { "@type": "Answer", "text": "Older bulbs use slower sequences. Alternate 1 (firmware 2.8 or later): off 5 seconds, then on 8 seconds and off 2 seconds five times, then on. Alternate 2 (firmware 2.7 and earlier): off 5s, on 8s, then off 2s / on 2s three times, then off 2s / on 8s twice, then off 2s, then on. Both flash 3 times when the reset worked." } },
+        { "@type": "Question", "name": "How do I know the reset worked?", "acceptedAnswer": { "@type": "Answer", "text": "Bulbs on current firmware flash once the reset is done. Older bulbs flash on and off 3 times. If nothing happens, try the next sequence down the list." } },
+        { "@type": "Question", "name": "Why won't my Cync bulb reset?", "acceptedAnswer": { "@type": "Answer", "text": "The usual causes are the wrong switch or the wrong timing. Use a plain on/off switch; dimmers, 3-way lamps and multi-function switches don't work. Flip the switch right when each step ends, try a different fixture, try the older sequences, and update firmware in the Cync app under Settings, Firmware Updates." } },
+        { "@type": "Question", "name": "Can I reset a Cync bulb without the app?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. The switch-flipping sequences reset the bulb without the app. If the bulb still shows in your Cync app, deleting it there also factory resets it." } },
+        { "@type": "Question", "name": "What do I do after resetting a Cync bulb?", "acceptedAnswer": { "@type": "Answer", "text": "Open the Cync app, Google Home or Alexa and add the light as a new device." } }
+      ]
+    }
+  ]
+}
+</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='9' y='1' width='14' height='30' rx='5' fill='%23222'/%3E%3Ccircle cx='16' cy='8' r='4' fill='%23ff453a'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23ffd60a'/%3E%3Ccircle cx='16' cy='24' r='4' fill='%2330d158'/%3E%3C/svg%3E">
 <style>
   :root {
@@ -142,6 +200,7 @@
   tr:last-child td { border-bottom: 0; }
   ul.tips { padding-left: 20px; }
   ul.tips li { margin-bottom: 6px; }
+  .faq h3 { margin-top: 20px; }
   footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
 
   @media (max-width: 600px) {
@@ -165,8 +224,8 @@
       <circle cx="16" cy="48" r="7" fill="var(--green)"/>
     </svg>
     <div>
-      <h1>Cync Reset Stoplight</h1>
-      <p class="muted" style="margin:0">A visual timer for factory resetting Cync / C by GE smart bulbs with your light switch.</p>
+      <h1>How to reset a Cync / C by GE smart bulb</h1>
+      <p class="muted" style="margin:0"><b>Cync Reset Stoplight</b> is a free timer for factory resetting Cync and C by GE bulbs with your light switch. It tells you exactly when to flip.</p>
     </div>
   </header>
 
@@ -242,7 +301,12 @@
     <div class="table-wrap">
       <table>
         <thead><tr><th>Sequence</th><th>For</th><th>Steps</th><th>Success signal</th></tr></thead>
-        <tbody id="ref-rows"></tbody>
+        <tbody id="ref-rows">
+          <tr data-seq="standard"><td><b>Standard</b><div class="small muted">Latest firmware · try this first</div></td><td>Most Cync bulbs on current firmware, including Reveal and Deco.</td><td>Start OFF. ON 1s, OFF 1s, five times.</td><td>The bulb flashes.</td></tr>
+          <tr data-seq="alt1"><td><b>Alternate 1</b><div class="small muted">Firmware 2.8+ · older bulbs</div></td><td>Older bulbs (2019-era firmware 2.8 or later) and light strips made before 2020.</td><td>OFF 5s. ON 8s, OFF 2s, five times. Then ON.</td><td>The bulb flashes on and off 3 times.</td></tr>
+          <tr data-seq="alt2"><td><b>Alternate 2</b><div class="small muted">Firmware 2.7 and earlier · legacy</div></td><td>Legacy C by GE bulbs on firmware 2.7 or earlier.</td><td>OFF 5s, ON 8s. Then OFF 2s / ON 2s ×3. Then OFF 2s / ON 8s ×2. Then OFF 2s, then ON.</td><td>The bulb flashes on and off 3 times.</td></tr>
+          <tr data-seq="wafer"><td><b>Wafer downlight</b><div class="small muted">Switch method</div></td><td>Cync wafer downlights. Cync says to flip the switch 5 times or until it blinks, and gives no timing, so this uses a steady 1 second.</td><td>Flip ON/OFF 5 times, or until it blinks.</td><td>The light blinks.</td></tr>
+        </tbody>
       </table>
     </div>
 
@@ -272,9 +336,27 @@
     </ul>
   </section>
 
+  <!-- Keep these answers in sync with the FAQPage JSON-LD in <head>. -->
+  <section class="faq" id="faq">
+    <h2>Cync reset FAQ</h2>
+    <h3>How do I factory reset a Cync bulb?</h3>
+    <p>Start with the bulb off. Turn the switch on for 1 second, then off for 1 second, five times. Then turn it on and leave it. The bulb flashes when the reset worked. This is Cync's standard sequence for current firmware.</p>
+    <h3>How do I reset an older C by GE bulb?</h3>
+    <p>Older bulbs use slower sequences. <b>Alternate 1</b> (firmware 2.8 or later): off 5 seconds, then on 8 seconds and off 2 seconds five times, then on. <b>Alternate 2</b> (firmware 2.7 and earlier): off 5s, on 8s, then off 2s / on 2s three times, then off 2s / on 8s twice, then off 2s, then on. Both flash 3 times when the reset worked.</p>
+    <h3>How do I know the reset worked?</h3>
+    <p>Bulbs on current firmware flash once the reset is done. Older bulbs flash on and off 3 times. If nothing happens, try the next sequence down the list.</p>
+    <h3>Why won't my Cync bulb reset?</h3>
+    <p>The usual causes are the wrong switch or the wrong timing. Use a plain on/off switch; dimmers, 3-way lamps and multi-function switches don't work. Flip the switch right when each step ends, try a different fixture, try the older sequences, and update firmware in the Cync app under Settings → Firmware Updates.</p>
+    <h3>Can I reset a Cync bulb without the app?</h3>
+    <p>Yes. The switch-flipping sequences reset the bulb without the app. If the bulb still shows in your Cync app, deleting it there also factory resets it.</p>
+    <h3>What do I do after resetting a Cync bulb?</h3>
+    <p>Open the Cync app, Google Home or Alexa and add the light as a new device.</p>
+  </section>
+
   <footer>
     <p>Sequences come from Cync's support article <a href="https://cyncsupport.gelighting.com/s/article/resetting-light-bulbs" rel="noopener">Factory Reset Smart Light Bulbs</a>. Notes on other devices come from Cync's <a href="https://cyncsupport.gelighting.com/s/article/resetting-wafer-downlights" rel="noopener">wafer downlight article</a> and published reset guides. Steps can change with firmware, so check the official page if something doesn't match.</p>
-    <p>An unofficial community tool. It is not affiliated with or endorsed by GE, GE Lighting, Savant or Cync. All trademarks belong to their owners. · <a href="https://github.com/KenThorburn/cync-reset-stoplight">Source on GitHub</a></p>
+    <p>An unofficial community tool. It is not affiliated with or endorsed by GE, GE Lighting, Savant or Cync. All trademarks belong to their owners. · <a href="https://github.com/KenThorburn/cync-reset-stoplight">Source on GitHub</a> · <a href="llms.txt">Text version for AI assistants</a></p>
+    <p>Last updated <time datetime="2026-10-22">October 22, 2026</time>.</p>
   </footer>
 </main>
 
@@ -285,6 +367,7 @@
   const repeat = (pattern, times) => Array.from({ length: times }, () => pattern).flat();
 
   // Each sequence ends with a final "turn ON and leave it", added at run time.
+  // The reference table, JSON-LD, llms.txt and README repeat these as text, so keep them in sync.
   const SEQUENCES = [
     {
       id: "standard",
@@ -372,14 +455,12 @@
     });
   }
 
+  // The table text is static HTML so crawlers that don't run JS can read it; this only adds the chips.
   function renderReference() {
-    $("ref-rows").innerHTML = SEQUENCES.map((seq) => `
-      <tr>
-        <td><b>${seq.name}</b><div class="small muted">${seq.tag}</div></td>
-        <td>${seq.forText}</td>
-        <td>${seq.stepsText}<div class="chips" aria-hidden="true">${chipsHtml(fullSteps(seq))}</div></td>
-        <td>${seq.confirm.replace(" when the reset worked", "")}</td>
-      </tr>`).join("");
+    for (const row of $("ref-rows").querySelectorAll("tr[data-seq]")) {
+      const seq = SEQUENCES.find((s) => s.id === row.dataset.seq);
+      row.cells[2].insertAdjacentHTML("beforeend", `<div class="chips" aria-hidden="true">${chipsHtml(fullSteps(seq))}</div>`);
+    }
   }
 
   function loadSelection() {

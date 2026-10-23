@@ -1,6 +1,6 @@
 # Cync Reset Stoplight 🚦
 
-A stoplight-style timer for factory resetting **Cync / C by GE** smart bulbs by flipping the light switch.
+**How to factory reset a Cync / C by GE smart bulb**, with a free stoplight-style timer that tells you exactly when to flip the light switch. Covers the standard Cync reset and the older firmware sequences.
 
 **▶ Use it in your browser: https://kenthorburn.github.io/cync-reset-stoplight/**
 
@@ -43,10 +43,13 @@ python3 cync_reset_timer.py
 
 ```
 docs/index.html        The website (one static file, served by GitHub Pages)
+docs/llms.txt          Plain-text version of the guide for AI assistants
+docs/sitemap.xml       Sitemap for search engines
+docs/og-image.png      Preview image for link shares
 cync_reset_timer.py    Terminal version
 ```
 
-The sequence data lives in both files. If you change one, change the other.
+The sequence data lives in both code files. `docs/index.html` also repeats it as static text (the reference table, the FAQ and the JSON-LD in `<head>`), and so do `docs/llms.txt` and this README. If you change a sequence, update all of them.
 
 To run the site locally, open `docs/index.html` in a browser. No build step.
 
