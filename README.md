@@ -2,7 +2,7 @@
 
 **How to factory reset a Cync / C by GE smart bulb**, with a free stoplight-style timer that tells you exactly when to flip the light switch. Covers the standard Cync reset and the older firmware sequences.
 
-**▶ Use it in your browser: https://kenthorburn.github.io/cync-reset-stoplight/**
+**▶ Use it in your browser: https://kthorburn.github.io/cync-reset-stoplight/**
 
 | Color | Meaning |
 | --- | --- |
