@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cync Reset Stoplight</title>
+<meta name="description" content="A stoplight timer for factory resetting Cync / C by GE smart bulbs: green = switch ON, red = switch OFF, yellow = get ready.">
+<meta name="theme-color" content="#0e1014">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='9' y='1' width='14' height='30' rx='5' fill='%23222'/%3E%3Ccircle cx='16' cy='8' r='4' fill='%23ff453a'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23ffd60a'/%3E%3Ccircle cx='16' cy='24' r='4' fill='%2330d158'/%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0e1014;
+    --panel: #171a21;
+    --panel-2: #1f232c;
+    --line: #2b303b;
+    --text: #f2f4f8;
+    --muted: #9aa3b2;
+    --red: #ff453a;
+    --yellow: #ffd60a;
+    --green: #30d158;
+    --lamp-off: #2a2d33;
+    --state: var(--muted);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    transition: background-color .25s;
+  }
+  body.state-on  { background: color-mix(in srgb, var(--green) 14%, var(--bg)); --state: var(--green); }
+  body.state-off { background: color-mix(in srgb, var(--red) 14%, var(--bg)); --state: var(--red); }
+  main { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 40px 0 12px; }
+  h3 { font-size: 16px; margin: 0 0 4px; }
+  p { margin: 0 0 12px; }
+  a { color: #7cb7ff; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+  [hidden] { display: none !important; }
+
+  /* Header */
+  .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .brand .mini-light { flex: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0 0 24px; font-size: 15px; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+
+  /* Sequence picker */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .card {
+    position: relative; display: block; cursor: pointer;
+    background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .card:hover { border-color: #3d4452; }
+  .card input { position: absolute; opacity: 0; pointer-events: none; }
+  .card:has(input:checked) { border-color: var(--green); background: var(--panel-2); }
+  .card:has(input:focus-visible) { outline: 3px solid #7cb7ff; outline-offset: 2px; }
+  .card .tag { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .card .badge {
+    position: absolute; top: 12px; right: 12px; font-size: 12px; font-weight: 600;
+    color: #06210f; background: var(--green); border-radius: 999px; padding: 1px 8px;
+  }
+
+  /* Chips timeline */
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .chip {
+    min-width: 26px; height: 24px; padding: 0 5px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .chip.on  { background: var(--green); color: #06210f; }
+  .chip.off { background: var(--red); color: #fff; }
+  .chip.done { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
+  .chip.current { outline: 3px solid var(--text); outline-offset: 1px; }
+
+  /* Controls */
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin: 20px 0 0; }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+  .toggle input { width: 18px; height: 18px; accent-color: var(--green); }
+  button {
+    font: inherit; font-weight: 700; cursor: pointer; border: 0; border-radius: 12px;
+    padding: 12px 20px; color: var(--text); background: var(--panel-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  button:hover { filter: brightness(1.12); }
+  button:focus-visible { outline: 3px solid #7cb7ff; outline-offset: 2px; }
+  .btn-go { background: var(--green); color: #06210f; box-shadow: none; font-size: 18px; padding: 14px 28px; }
+  .steps-howto { margin: 16px 0 0; padding-left: 20px; color: var(--muted); }
+  .steps-howto li { margin-bottom: 4px; }
+  .steps-howto b { color: var(--text); }
+
+  /* Runner */
+  .runner {
+    display: grid; grid-template-columns: auto 1fr; gap: 20px 28px; align-items: center;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 24px; padding: 24px;
+  }
+  .stoplight {
+    background: #111317; border: 3px solid #2e323a; border-radius: 28px;
+    padding: 14px; display: grid; gap: 14px; justify-items: center;
+  }
+  .lamp {
+    width: 92px; height: 92px; border-radius: 50%; background: var(--lamp-off);
+    box-shadow: inset 0 -6px 12px rgba(0,0,0,.45);
+    transition: background-color .08s, box-shadow .08s;
+  }
+  .lamp.lit.red    { background: var(--red);    box-shadow: 0 0 36px 6px color-mix(in srgb, var(--red) 70%, transparent); }
+  .lamp.lit.yellow { background: var(--yellow); box-shadow: 0 0 36px 6px color-mix(in srgb, var(--yellow) 70%, transparent); animation: blink .5s steps(2, jump-none) infinite; }
+  .lamp.lit.green  { background: var(--green);  box-shadow: 0 0 36px 6px color-mix(in srgb, var(--green) 70%, transparent); }
+  @keyframes blink { 50% { opacity: .55; } }
+  .readout { min-width: 0; }
+  .label { font-size: 15px; color: var(--muted); }
+  .instruction {
+    font-size: clamp(44px, 11vw, 96px); font-weight: 900; line-height: 1; letter-spacing: -.02em;
+    color: var(--state); margin: 4px 0 8px;
+  }
+  .count {
+    font-size: clamp(64px, 18vw, 150px); font-weight: 800; line-height: 1;
+    font-variant-numeric: tabular-nums; color: var(--text);
+  }
+  .count small { font-size: .3em; color: var(--muted); font-weight: 600; margin-left: 4px; }
+  .bar { height: 12px; border-radius: 999px; background: var(--lamp-off); overflow: hidden; margin: 16px 0 12px; }
+  .bar > div { height: 100%; width: 0; background: var(--state); }
+  .next {
+    min-height: 44px; display: flex; align-items: center; border-radius: 12px;
+    padding: 8px 14px; font-weight: 700; background: var(--panel-2); color: var(--muted);
+  }
+  .next.warn { background: var(--yellow); color: #231c00; }
+  .runner-foot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+  .done-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+
+  /* Reference */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  th { background: var(--panel); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+  ul.tips { padding-left: 20px; }
+  ul.tips li { margin-bottom: 6px; }
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+
+  @media (max-width: 600px) {
+    .runner { grid-template-columns: 1fr; padding: 16px; }
+    .stoplight { grid-auto-flow: column; justify-self: center; border-radius: 999px; padding: 10px 16px; }
+    .lamp { width: 64px; height: 64px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lamp.lit.yellow { animation: none; }
+    body { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="brand">
+    <svg class="mini-light" width="34" height="68" viewBox="0 0 32 64" aria-hidden="true">
+      <rect x="2" y="2" width="28" height="60" rx="10" fill="#1d2027" stroke="#2e323a" stroke-width="2"/>
+      <circle cx="16" cy="16" r="7" fill="var(--red)"/>
+      <circle cx="16" cy="32" r="7" fill="var(--yellow)"/>
+      <circle cx="16" cy="48" r="7" fill="var(--green)"/>
+    </svg>
+    <div>
+      <h1>Cync Reset Stoplight</h1>
+      <p class="muted" style="margin:0">A visual timer for factory resetting Cync / C by GE smart bulbs with your light switch.</p>
+    </div>
+  </header>
+
+  <div class="legend" aria-label="Color key">
+    <span><i class="dot" style="background:var(--green)"></i><b>Green</b>&nbsp;= switch ON</span>
+    <span><i class="dot" style="background:var(--red)"></i><b>Red</b>&nbsp;= switch OFF</span>
+    <span><i class="dot" style="background:var(--yellow)"></i><b>Yellow</b>&nbsp;= get ready, a change is coming</span>
+  </div>
+
+  <!-- Setup -->
+  <section id="setup">
+    <h2 style="margin-top:0">1. Pick a sequence</h2>
+    <div class="cards" id="cards" role="radiogroup" aria-label="Reset sequence"></div>
+
+    <h2>2. Get in position</h2>
+    <ol class="steps-howto">
+      <li>Use a <b>plain on/off switch</b>. Dimmers, 3-way lamps and multi-function switches won't work. A power strip with a switch, or plugging a lamp in and out, works too.</li>
+      <li>Turn the bulb <b>OFF</b> and keep your hand on the switch.</li>
+      <li>Press <b>Start</b>. The timer runs on its own. Flip the switch whenever the color changes. It beeps at every change.</li>
+    </ol>
+    <div class="controls">
+      <button class="btn-go" id="start">Start ▶</button>
+      <label class="toggle"><input type="checkbox" id="opt-sound" checked> Beeps</label>
+      <label class="toggle"><input type="checkbox" id="opt-voice"> Say “on / off” out loud</label>
+    </div>
+  </section>
+
+  <!-- Running -->
+  <section id="run" hidden aria-live="off">
+    <div class="runner">
+      <div class="stoplight" aria-hidden="true">
+        <div class="lamp red" id="lamp-red"></div>
+        <div class="lamp yellow" id="lamp-yellow"></div>
+        <div class="lamp green" id="lamp-green"></div>
+      </div>
+      <div class="readout">
+        <div class="label" id="run-name"></div>
+        <div class="instruction" id="instruction">TURN OFF</div>
+        <div class="count" id="count-wrap"><span id="count">0</span><small>sec</small></div>
+        <div class="bar"><div id="bar"></div></div>
+        <div class="next" id="next"></div>
+        <div id="done-box" hidden>
+          <p style="font-size:20px;margin-top:4px"><b id="confirm-text"></b></p>
+          <div class="done-actions">
+            <button class="btn-go" id="yes">It flashed ✓</button>
+            <button id="no">No flash</button>
+          </div>
+        </div>
+      </div>
+      <div class="runner-foot">
+        <div>
+          <div class="label" id="step-label"></div>
+          <div class="chips" id="run-chips"></div>
+        </div>
+        <button id="stop">Stop ■</button>
+      </div>
+    </div>
+    <p class="small muted" id="sr-status" role="status" style="margin-top:12px"></p>
+  </section>
+
+  <!-- Result -->
+  <section id="result" hidden>
+    <div class="runner" style="grid-template-columns:1fr">
+      <div id="result-body"></div>
+      <div class="done-actions" id="result-actions"></div>
+    </div>
+  </section>
+
+  <!-- Reference -->
+  <section>
+    <h2>All Cync / C by GE reset sequences</h2>
+    <p class="muted">Cync now lists the 1-second sequence as its main process. Older bulbs use one of the two alternate processes. If you don't know your firmware, work down the list.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Sequence</th><th>For</th><th>Steps</th><th>Success signal</th></tr></thead>
+        <tbody id="ref-rows"></tbody>
+      </table>
+    </div>
+
+    <h2>Other Cync devices</h2>
+    <p class="muted">These don't use the switch-flipping sequences above, so you don't need the timer for them.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Device</th><th>How to reset</th></tr></thead>
+        <tbody>
+          <tr><td>Light strips (2020 and newer)</td><td>Hold the reset button on the control box for about 10 seconds.</td></tr>
+          <tr><td>Light strips (before 2020)</td><td>Unplug and replug the barrel plug, then run <b>Alternate 1</b> by plugging and unplugging. It flashes 3 times when reset.</td></tr>
+          <tr><td>Wafer downlights (no switch)</td><td>Turn off, take the fixture down, then disconnect and reconnect the quick connector 5 times.</td></tr>
+          <tr><td>Wired paddle / button switches</td><td>Hold the power button until the light turns red, then release. It blinks blue.</td></tr>
+          <tr><td>Wired toggle switch</td><td>Press up until the LED turns red, then release. It blinks blue once.</td></tr>
+          <tr><td>Wire-free switches, remotes, motion sensors</td><td>Press and hold the pinhole button with a paperclip until the LED turns red.</td></tr>
+          <tr><td>C-Reach bridge</td><td>Unplug it, then hold the side button while plugging it back in. Keep holding at least 10 seconds until all 3 LEDs flash red. This also unpairs every device on the bridge.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>If it still won't reset</h2>
+    <ul class="tips">
+      <li>Try a different fixture or lamp. Cync suggests this first.</li>
+      <li>Try the next sequence down the list. Firmware age decides which one the bulb understands.</li>
+      <li>If the bulb is still in your Cync app, deleting it there also factory resets it.</li>
+      <li>Update firmware in the Cync app under <b>Settings → Firmware Updates</b>, then try again.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Sequences come from Cync's support article <a href="https://cyncsupport.gelighting.com/s/article/resetting-light-bulbs" rel="noopener">Factory Reset Smart Light Bulbs</a>. Notes on other devices come from Cync's <a href="https://cyncsupport.gelighting.com/s/article/resetting-wafer-downlights" rel="noopener">wafer downlight article</a> and published reset guides. Steps can change with firmware, so check the official page if something doesn't match.</p>
+    <p>An unofficial community tool. It is not affiliated with or endorsed by GE, GE Lighting, Savant or Cync. All trademarks belong to their owners. · <a href="https://github.com/KenThorburn/cync-reset-stoplight">Source on GitHub</a></p>
+  </footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const repeat = (pattern, times) => Array.from({ length: times }, () => pattern).flat();
+
+  // Each sequence ends with a final "turn ON and leave it", added at run time.
+  const SEQUENCES = [
+    {
+      id: "standard",
+      name: "Standard",
+      tag: "Latest firmware · try this first",
+      forText: "Most Cync bulbs on current firmware, including Reveal and Deco.",
+      stepsText: "Start OFF. ON 1s, OFF 1s, five times.",
+      steps: [["OFF", 3], ...repeat([["ON", 1], ["OFF", 1]], 5)],
+      confirm: "The bulb flashes when the reset worked.",
+      recommended: true,
+    },
+    {
+      id: "alt1",
+      name: "Alternate 1",
+      tag: "Firmware 2.8+ · older bulbs",
+      forText: "Older bulbs (2019-era firmware 2.8 or later) and light strips made before 2020.",
+      stepsText: "OFF 5s. ON 8s, OFF 2s, five times. Then ON.",
+      steps: [["OFF", 5], ...repeat([["ON", 8], ["OFF", 2]], 5)],
+      confirm: "The bulb flashes on and off 3 times when the reset worked.",
+    },
+    {
+      id: "alt2",
+      name: "Alternate 2",
+      tag: "Firmware 2.7 and earlier · legacy",
+      forText: "Legacy C by GE bulbs on firmware 2.7 or earlier.",
+      stepsText: "OFF 5s, ON 8s. Then OFF 2s / ON 2s ×3. Then OFF 2s / ON 8s ×2. Then OFF 2s, then ON.",
+      steps: [["OFF", 5], ["ON", 8], ...repeat([["OFF", 2], ["ON", 2]], 3), ...repeat([["OFF", 2], ["ON", 8]], 2), ["OFF", 2]],
+      confirm: "The bulb flashes on and off 3 times when the reset worked.",
+    },
+    {
+      id: "wafer",
+      name: "Wafer downlight",
+      tag: "Switch method",
+      forText: "Cync wafer downlights. Cync says to flip the switch 5 times or until it blinks, and gives no timing, so this uses a steady 1 second.",
+      stepsText: "Flip ON/OFF 5 times, or until it blinks.",
+      steps: [["OFF", 3], ...repeat([["ON", 1], ["OFF", 1]], 5)],
+      confirm: "The light blinks when the reset worked.",
+    },
+  ];
+
+  const WARN_SECONDS = 1.5;
+  const $ = (id) => document.getElementById(id);
+  const ui = {
+    setup: $("setup"), run: $("run"), result: $("result"), cards: $("cards"),
+    start: $("start"), stop: $("stop"), sound: $("opt-sound"), voice: $("opt-voice"),
+    runName: $("run-name"), instruction: $("instruction"), count: $("count"), countWrap: $("count-wrap"),
+    bar: $("bar"), next: $("next"), stepLabel: $("step-label"), chips: $("run-chips"),
+    lampRed: $("lamp-red"), lampYellow: $("lamp-yellow"), lampGreen: $("lamp-green"),
+    doneBox: $("done-box"), confirmText: $("confirm-text"), yes: $("yes"), no: $("no"),
+    resultBody: $("result-body"), resultActions: $("result-actions"), status: $("sr-status"),
+  };
+
+  let selected = loadSelection();
+  let run = null;
+  let audio = null;
+  let wakeLock = null;
+
+  // ---------- Rendering helpers ----------
+
+  function chipsHtml(steps, current = -1) {
+    return steps.map(([state, secs], i) => {
+      const cls = i < current ? "done" : state.toLowerCase();
+      const label = secs == null ? "ON" : secs;
+      return `<span class="chip ${cls}${i === current ? " current" : ""}" title="${state}${secs == null ? " (final)" : ` ${secs}s`}">${label}</span>`;
+    }).join("");
+  }
+
+  function fullSteps(seq) {
+    return [...seq.steps, ["ON", null]];
+  }
+
+  function renderCards() {
+    ui.cards.innerHTML = SEQUENCES.map((seq) => `
+      <label class="card">
+        <input type="radio" name="seq" value="${seq.id}" ${seq.id === selected ? "checked" : ""}>
+        ${seq.recommended ? '<span class="badge">Try first</span>' : ""}
+        <h3>${seq.name}</h3>
+        <div class="tag">${seq.tag}</div>
+        <div class="small muted">${seq.stepsText}</div>
+        <div class="chips" aria-hidden="true">${chipsHtml(fullSteps(seq))}</div>
+      </label>`).join("");
+    ui.cards.addEventListener("change", (e) => {
+      selected = e.target.value;
+      try { localStorage.setItem("cync-seq", selected); } catch {}
+    });
+  }
+
+  function renderReference() {
+    $("ref-rows").innerHTML = SEQUENCES.map((seq) => `
+      <tr>
+        <td><b>${seq.name}</b><div class="small muted">${seq.tag}</div></td>
+        <td>${seq.forText}</td>
+        <td>${seq.stepsText}<div class="chips" aria-hidden="true">${chipsHtml(fullSteps(seq))}</div></td>
+        <td>${seq.confirm.replace(" when the reset worked", "")}</td>
+      </tr>`).join("");
+  }
+
+  function loadSelection() {
+    try {
+      const saved = localStorage.getItem("cync-seq");
+      if (SEQUENCES.some((s) => s.id === saved)) return saved;
+    } catch {}
+    return SEQUENCES[0].id;
+  }
+
+  function show(section) {
+    for (const s of [ui.setup, ui.run, ui.result]) s.hidden = s !== section;
+  }
+
+  function setLamps(state, warn) {
+    ui.lampRed.classList.toggle("lit", state === "OFF");
+    ui.lampGreen.classList.toggle("lit", state === "ON");
+    ui.lampYellow.classList.toggle("lit", !!warn);
+    document.body.classList.toggle("state-on", state === "ON");
+    document.body.classList.toggle("state-off", state === "OFF");
+  }
+
+  // ---------- Sound ----------
+
+  function ensureAudio() {
+    if (!ui.sound.checked) return null;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    audio = audio || new Ctx();
+    audio.resume();
+    return audio;
+  }
+
+  function tone(out, at, freq, dur, vol = 0.25, type = "sine") {
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(vol, at + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, at + dur);
+    osc.connect(gain).connect(out);
+    osc.start(at);
+    osc.stop(at + dur + 0.02);
+  }
+
+  // Schedule every beep up front on the audio clock so timing stays exact
+  // even if the page is throttled or the screen is busy.
+  function scheduleSound(steps, audioStart) {
+    const out = audio.createGain();
+    out.connect(audio.destination);
+    let t = 0;
+    steps.forEach(([state, secs], i) => {
+      const at = audioStart + t;
+      if (secs == null) {
+        [523, 659, 784, 1047].forEach((f, k) => tone(out, at + k * 0.09, f, 0.35, 0.22));
+        return;
+      }
+      if (state === "ON") tone(out, at, 988, 0.16, 0.3, "triangle");
+      else tone(out, at, 494, 0.18, 0.3, "triangle");
+      const warnFor = warnWindow(secs);
+      if (warnFor) tone(out, at + secs - warnFor, 1400, 0.05, 0.12);
+      t += secs;
+    });
+    return out;
+  }
+
+  function warnWindow(secs) {
+    return secs >= 2 ? Math.min(WARN_SECONDS, secs / 2) : 0;
+  }
+
+  function say(text) {
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.3;
+    speechSynthesis.speak(u);
+  }
+
+  // ---------- Run loop ----------
+
+  async function start() {
+    const seq = SEQUENCES.find((s) => s.id === selected);
+    const steps = fullSteps(seq);
+    const ends = [];
+    steps.reduce((t, [, secs]) => { ends.push(secs == null ? Infinity : t + secs); return t + (secs || 0); }, 0);
+
+    const ctx = ensureAudio();
+    const lead = 0.15; // small buffer so the first beep isn't clipped
+    run = {
+      seq, steps, ends, index: -1, raf: 0, timers: [],
+      t0: performance.now() + lead * 1000,
+      out: ctx ? scheduleSound(steps, ctx.currentTime + lead) : null,
+    };
+
+    if (ui.voice.checked) {
+      let t = 0;
+      steps.forEach(([state, secs]) => {
+        // Speak slightly early to cover speech-engine latency.
+        const ms = Math.max(0, (lead + t - 0.12) * 1000);
+        run.timers.push(setTimeout(() => say(secs == null ? "on, and leave it" : state.toLowerCase()), ms));
+        t += secs || 0;
+      });
+    }
+
+    try { wakeLock = await navigator.wakeLock?.request("screen"); } catch {}
+
+    ui.runName.textContent = seq.name;
+    ui.doneBox.hidden = true;
+    ui.countWrap.hidden = false;
+    ui.next.hidden = false;
+    show(ui.run);
+    ui.stop.focus();
+    frame();
+  }
+
+  function frame() {
+    const { steps, ends } = run;
+    const elapsed = Math.max(0, (performance.now() - run.t0) / 1000);
+    let index = ends.findIndex((end) => elapsed < end);
+    const [state, secs] = steps[index];
+
+    if (index !== run.index) {
+      run.index = index;
+      ui.instruction.textContent = secs == null ? "TURN ON" : `TURN ${state}`;
+      ui.stepLabel.textContent = `Step ${index + 1} of ${steps.length}`;
+      ui.chips.innerHTML = chipsHtml(steps, index);
+      ui.status.textContent = secs == null ? "Turn on and leave it on." : `Turn ${state.toLowerCase()} for ${secs} seconds.`;
+      if (secs == null) return finish();
+    }
+
+    const start = index === 0 ? 0 : ends[index - 1];
+    const remaining = ends[index] - elapsed;
+    const warn = remaining <= warnWindow(secs);
+    const [nextState, nextSecs] = steps[index + 1];
+    const nextText = nextSecs == null ? `TURN ${nextState} and leave it on` : `TURN ${nextState} for ${nextSecs}s`;
+
+    setLamps(state, warn);
+    ui.count.textContent = Math.ceil(remaining);
+    ui.bar.style.width = `${Math.min(100, ((elapsed - start) / secs) * 100)}%`;
+    ui.next.classList.toggle("warn", warn);
+    ui.next.textContent = warn ? `GET READY → ${nextText}` : `Next: ${nextText}`;
+
+    run.raf = requestAnimationFrame(frame);
+  }
+
+  function finish() {
+    setLamps("ON", false);
+    ui.countWrap.hidden = true;
+    ui.next.hidden = true;
+    ui.bar.style.width = "100%";
+    ui.instruction.textContent = "TURN ON";
+    ui.confirmText.textContent = `Leave it ON and watch. ${run.seq.confirm}`;
+    ui.doneBox.hidden = false;
+    ui.yes.focus();
+    releaseWakeLock();
+  }
+
+  function stop() {
+    if (!run) return;
+    cancelAnimationFrame(run.raf);
+    run.timers.forEach(clearTimeout);
+    run.out?.disconnect();
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+    releaseWakeLock();
+    setLamps(null, false);
+  }
+
+  function releaseWakeLock() {
+    wakeLock?.release().catch(() => {});
+    wakeLock = null;
+  }
+
+  function showResult(success) {
+    const seq = run.seq;
+    stop();
+    // Bulbs fall back from the newest sequence to the oldest.
+    const order = ["standard", "alt1", "alt2"];
+    const nextId = order.includes(seq.id) ? order[order.indexOf(seq.id) + 1] : undefined;
+    const nextSeq = SEQUENCES.find((s) => s.id === nextId);
+    if (success) {
+      ui.resultBody.innerHTML = `<h2 style="margin-top:0;color:var(--green)">Reset worked</h2>
+        <p>Open the Cync app (or Google Home / Alexa) and add the light as a new device.</p>`;
+      ui.resultActions.innerHTML = `<button id="r-again">Reset another light</button>`;
+    } else {
+      ui.resultBody.innerHTML = `<h2 style="margin-top:0;color:var(--yellow)">No flash yet</h2>
+        <p>${nextSeq
+          ? `Your bulb may run older firmware. Try <b>${nextSeq.name}</b> next (${nextSeq.tag.toLowerCase()}).`
+          : "Try a different fixture or plain on/off lamp, or update firmware in the Cync app (Settings → Firmware Updates), then try again."}</p>
+        <p class="muted small">Timing matters. Flip the switch as soon as the color changes.</p>`;
+      ui.resultActions.innerHTML = (nextSeq ? `<button class="btn-go" id="r-next">Try ${nextSeq.name} ▶</button>` : "")
+        + `<button id="r-retry">Retry ${seq.name}</button><button id="r-again">Back to list</button>`;
+    }
+    show(ui.result);
+    $("r-next")?.addEventListener("click", () => { pick(nextSeq.id); start(); });
+    $("r-retry")?.addEventListener("click", () => { pick(seq.id); start(); });
+    $("r-again").addEventListener("click", () => { show(ui.setup); ui.start.focus(); });
+    ui.resultActions.querySelector("button").focus();
+  }
+
+  function pick(id) {
+    selected = id;
+    const input = ui.cards.querySelector(`input[value="${id}"]`);
+    if (input) input.checked = true;
+    try { localStorage.setItem("cync-seq", id); } catch {}
+  }
+
+  // ---------- Wire up ----------
+
+  renderCards();
+  renderReference();
+  ui.start.addEventListener("click", start);
+  ui.stop.addEventListener("click", () => { stop(); show(ui.setup); ui.start.focus(); });
+  ui.yes.addEventListener("click", () => showResult(true));
+  ui.no.addEventListener("click", () => showResult(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !ui.run.hidden) ui.stop.click();
+  });
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible" && run && !ui.run.hidden && ui.doneBox.hidden && !wakeLock) {
+      try { wakeLock = await navigator.wakeLock?.request("screen"); } catch {}
+    }
+  });
+})();
+</script>
+</body>
+</html>
